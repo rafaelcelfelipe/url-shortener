@@ -68,6 +68,7 @@ Cada fase entra quando a anterior estiver compreendida. Dependência de uma fase
 - Um repositório, `url-shortener`. Uma pasta por serviço: `shortener` agora, `statistics` depois. O Git fica na raiz.
 - POM pai só quando o segundo serviço existir. Até lá o `pom.xml` de `shortener` usa o parent do Spring Boot.
 - Pacote `com.urlshortener.shortener`. Código em inglês. Conversa e documentação em português.
+- Estilo do mercado Spring: `model` (a mesma classe vira entidade JPA), `service` com a regra, `repository` e DTO na API. Sem pacote `domain` separado da tabela.
 - Spring Boot 4.1.1. O starter web desta linha é `spring-boot-starter-webmvc`. Os testes vêm nos starters `*-test`, não num único `spring-boot-starter-test`.
 - Java 21, a LTS que as vagas ainda pedem. Records, pattern matching e virtual threads já são estáveis nela.
 - Lombok fica de fora até o código que o framework exige estar visível.
