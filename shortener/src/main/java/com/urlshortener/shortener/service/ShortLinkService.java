@@ -3,6 +3,7 @@ package com.urlshortener.shortener.service;
 import org.springframework.stereotype.Service;
 import com.urlshortener.shortener.model.ShortLink;
 import com.urlshortener.shortener.exception.InvalidUrlException;
+import com.urlshortener.shortener.exception.ShortLinkNotFoundException;
 import com.urlshortener.shortener.repository.ShortLinkRepository;
 import com.urlshortener.shortener.mapper.ShortLinkMapper;
 import com.urlshortener.shortener.dto.CreateLinkRequest;
@@ -53,6 +54,12 @@ public class ShortLinkService {
             throw new InvalidUrlException("Url must have a host");
         }
         return trimmedUrl;
+    }
+
+    public String resolve(String code) {
+        return repository.findById(code)
+            .map(ShortLink::getOriginalUrl)
+            .orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
 
     private String generateCode(){

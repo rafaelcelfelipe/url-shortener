@@ -3,6 +3,7 @@ package com.urlshortener.shortener.service;
 import com.urlshortener.shortener.dto.CreateLinkRequest;
 import com.urlshortener.shortener.dto.CreateLinkResponse;
 import com.urlshortener.shortener.exception.InvalidUrlException;
+import com.urlshortener.shortener.exception.ShortLinkNotFoundException;
 import com.urlshortener.shortener.mapper.ShortLinkMapper;
 import com.urlshortener.shortener.model.ShortLink;
 import com.urlshortener.shortener.repository.ShortLinkRepository;
@@ -16,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -51,6 +54,20 @@ class ShortLinkServiceTest {
         CreateLinkResponse response = service.create(new CreateLinkRequest("http://example.com"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
+    }
+
+    @Test
+    void resolvesExistingCode() {
+        when(repository.findById("abc1234")).thenReturn(Optional.of(new ShortLink("abc1234", "https://example.com/path")));
+
+        assertEquals("https://example.com/path", service.resolve("abc1234"));
+    }
+
+    @Test
+    void rejectsUnknownCode() {
+        when(repository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThrows(ShortLinkNotFoundException.class, () -> service.resolve("missing"));
     }
 
     @Test
