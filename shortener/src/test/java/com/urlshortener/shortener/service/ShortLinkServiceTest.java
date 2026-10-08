@@ -30,7 +30,7 @@ class ShortLinkServiceTest {
     @BeforeEach
     void setUp() {
         ShortLinkMapper mapper = Mappers.getMapper(ShortLinkMapper.class);
-        service = new ShortLinkService(repository, mapper);
+        service = new ShortLinkService(repository, mapper, "http://localhost:8080");
     }
 
     @Test
@@ -39,7 +39,7 @@ class ShortLinkServiceTest {
 
         CreateLinkResponse response = service.create(new CreateLinkRequest("https://example.com/path"));
 
-        assertEquals("https://example.com/path", response.originalUrl());
+        assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
         assertEquals(7, response.code().length());
         assertTrue(response.code().matches("[0-9a-zA-Z]{7}"));
     }
@@ -50,7 +50,7 @@ class ShortLinkServiceTest {
 
         CreateLinkResponse response = service.create(new CreateLinkRequest("http://example.com"));
 
-        assertEquals("http://example.com", response.originalUrl());
+        assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
     }
 
     @Test
