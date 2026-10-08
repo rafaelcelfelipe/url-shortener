@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.security.SecureRandom;
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ShortLinkService {
@@ -29,10 +31,17 @@ public class ShortLinkService {
         this.mapper = mapper;
         this.baseUrl = baseUrl;
     }
+
     public ShortLinkResponse create(ShortLinkRequest request) {
         String url = normalizeUrl(request.url());
         ShortLink saved = repository.save(new ShortLink(generateCode(), url));
         return mapper.toResponse(saved, baseUrl);
+    }
+
+    public List<ShortLinkResponse> getAll() {
+        return repository.findAll().stream()
+            .map(shortLink -> mapper.toResponse(shortLink, baseUrl))
+            .collect(Collectors.toList());
     }
 
     public ShortLinkResponse edit(ShortLinkRequest request, String code){
@@ -41,6 +50,11 @@ public class ShortLinkService {
         existing.setOriginalUrl(url);
         ShortLink saved = repository.save(existing);
         return mapper.toResponse(saved, baseUrl);
+    }
+
+    public void delete(String code){
+        ShortLink existing = getShortLinkEntity(code);
+        repository.delete(existing);
     }
 
 

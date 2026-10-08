@@ -17,9 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +48,7 @@ class ShortLinkServiceTest {
         ShortLinkResponse response = service.create(new ShortLinkRequest("https://example.com/path"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
+        assertEquals("https://example.com/path", response.originalUrl());
         assertEquals(7, response.code().length());
         assertTrue(response.code().matches("[0-9a-zA-Z]{7}"));
     }
@@ -57,6 +60,7 @@ class ShortLinkServiceTest {
         ShortLinkResponse response = service.create(new ShortLinkRequest("http://example.com"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
+        assertEquals("http://example.com", response.originalUrl());
     }
 
     @Test
@@ -72,6 +76,49 @@ class ShortLinkServiceTest {
         assertEquals("https://example.com/new", saved.getValue().getOriginalUrl());
         assertEquals("abc1234", response.code());
         assertEquals("http://localhost:8080/abc1234", response.shortUrl());
+        assertEquals("https://example.com/new", response.originalUrl());
+    }
+
+    @Test
+    void listsAllLinks() {
+        when(repository.findAll()).thenReturn(List.of(
+                new ShortLink("abc1234", "https://example.com"),
+                new ShortLink("xyz9876", "https://example.org/path")));
+
+        List<ShortLinkResponse> response = service.getAll();
+
+        assertEquals(2, response.size());
+        assertEquals("abc1234", response.get(0).code());
+        assertEquals("http://localhost:8080/abc1234", response.get(0).shortUrl());
+        assertEquals("https://example.com", response.get(0).originalUrl());
+        assertEquals("xyz9876", response.get(1).code());
+        assertEquals("http://localhost:8080/xyz9876", response.get(1).shortUrl());
+        assertEquals("https://example.org/path", response.get(1).originalUrl());
+    }
+
+    @Test
+    void listsNothingWhenRepositoryIsEmpty() {
+        when(repository.findAll()).thenReturn(List.of());
+
+        assertTrue(service.getAll().isEmpty());
+    }
+
+    @Test
+    void deletesExistingLink() {
+        ShortLink existing = new ShortLink("abc1234", "https://example.com");
+        when(repository.findById("abc1234")).thenReturn(Optional.of(existing));
+
+        service.delete("abc1234");
+
+        verify(repository).delete(existing);
+    }
+
+    @Test
+    void rejectsDeleteOfUnknownCode() {
+        when(repository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThrows(ShortLinkNotFoundException.class, () -> service.delete("missing"));
+        verify(repository, never()).delete(any());
     }
 
     @Test
