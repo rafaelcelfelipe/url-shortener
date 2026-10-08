@@ -3,6 +3,7 @@ package com.urlshortener.shortener.service;
 import org.springframework.stereotype.Service;
 import com.urlshortener.shortener.model.ShortLink;
 import com.urlshortener.shortener.exception.InvalidUrlException;
+import com.urlshortener.shortener.repository.ShortLinkRepository;
 
 import java.security.SecureRandom;
 import java.net.URI;
@@ -13,10 +14,15 @@ public class ShortLinkService {
     private static final int CODE_LENGHT = 7;
 
     private final SecureRandom random = new SecureRandom();
+    private final ShortLinkRepository repository;
+
+    public ShortLinkService(ShortLinkRepository repository){
+        this.repository = repository;
+    }
 
     public ShortLink create(String originalUrl){
         String url = normalizeUrl(originalUrl);
-        return new ShortLink(generateCode(), url);
+        return repository.save(new ShortLink(generateCode(), url));
     }
 
     private String normalizeUrl(String originalUrl){
