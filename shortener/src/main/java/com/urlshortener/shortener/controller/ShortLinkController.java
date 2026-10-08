@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/links")
@@ -22,5 +24,10 @@ public class ShortLinkController {
     @PostMapping
     public ResponseEntity<ShortLinkResponse> create(@RequestBody ShortLinkRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
+    }
+
+    @PutMapping("/{code}")
+    public ResponseEntity<ShortLinkResponse> edit(@RequestBody ShortLinkRequest request, @PathVariable String code) {
+        return ResponseEntity.ok(service.edit(request, code));
     }
 }

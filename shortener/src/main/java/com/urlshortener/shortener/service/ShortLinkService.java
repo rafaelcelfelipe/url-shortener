@@ -35,6 +35,14 @@ public class ShortLinkService {
         return mapper.toResponse(saved, baseUrl);
     }
 
+    public ShortLinkResponse edit(ShortLinkRequest request, String code){
+        String url = normalizeUrl(request.url());
+        ShortLink existing = getShortLinkEntity(code);
+        existing.setOriginalUrl(url);
+        ShortLink saved = repository.save(existing);
+        return mapper.toResponse(saved, baseUrl);
+    }
+
 
     public String resolve(String code) {
         return repository.findById(code)
@@ -70,5 +78,10 @@ public class ShortLinkService {
             code.append(ALPHABET.charAt(index));
         }
         return code.toString();
+    }
+
+    private ShortLink getShortLinkEntity(String code) {
+        return repository.findById(code)
+            .orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
 }

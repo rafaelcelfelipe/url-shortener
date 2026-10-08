@@ -20,7 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 class ShortLinkServiceTest {
@@ -54,6 +57,35 @@ class ShortLinkServiceTest {
         ShortLinkResponse response = service.create(new ShortLinkRequest("http://example.com"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
+    }
+
+    @Test
+    void editsExistingLinkAndKeepsTheCode() {
+        when(repository.findById("abc1234")).thenReturn(Optional.of(new ShortLink("abc1234", "https://example.com/old")));
+        when(repository.save(any(ShortLink.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ShortLinkResponse response = service.edit(new ShortLinkRequest("https://example.com/new"), "abc1234");
+
+        ArgumentCaptor<ShortLink> saved = ArgumentCaptor.forClass(ShortLink.class);
+        verify(repository).save(saved.capture());
+        assertEquals("abc1234", saved.getValue().getCode());
+        assertEquals("https://example.com/new", saved.getValue().getOriginalUrl());
+        assertEquals("abc1234", response.code());
+        assertEquals("http://localhost:8080/abc1234", response.shortUrl());
+    }
+
+    @Test
+    void rejectsEditOfUnknownCode() {
+        when(repository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThrows(ShortLinkNotFoundException.class,
+                () -> service.edit(new ShortLinkRequest("https://example.com"), "missing"));
+    }
+
+    @Test
+    void rejectsEditWithInvalidUrl() {
+        assertThrows(InvalidUrlException.class,
+                () -> service.edit(new ShortLinkRequest("ftp://example.com"), "abc1234"));
     }
 
     @Test
