@@ -1,5 +1,5 @@
 package com.urlshortener.shortener.dto;
 
-public record CreateLinkRequest(String url) {
+public record ShortLinkRequest(String url) {
     
 }

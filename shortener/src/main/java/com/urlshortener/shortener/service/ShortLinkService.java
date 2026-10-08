@@ -6,8 +6,8 @@ import com.urlshortener.shortener.exception.InvalidUrlException;
 import com.urlshortener.shortener.exception.ShortLinkNotFoundException;
 import com.urlshortener.shortener.repository.ShortLinkRepository;
 import com.urlshortener.shortener.mapper.ShortLinkMapper;
-import com.urlshortener.shortener.dto.CreateLinkRequest;
-import com.urlshortener.shortener.dto.CreateLinkResponse;
+import com.urlshortener.shortener.dto.ShortLinkRequest;
+import com.urlshortener.shortener.dto.ShortLinkResponse;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.security.SecureRandom;
@@ -29,10 +29,17 @@ public class ShortLinkService {
         this.mapper = mapper;
         this.baseUrl = baseUrl;
     }
-    public CreateLinkResponse create(CreateLinkRequest request) {
+    public ShortLinkResponse create(ShortLinkRequest request) {
         String url = normalizeUrl(request.url());
         ShortLink saved = repository.save(new ShortLink(generateCode(), url));
         return mapper.toResponse(saved, baseUrl);
+    }
+
+
+    public String resolve(String code) {
+        return repository.findById(code)
+            .map(ShortLink::getOriginalUrl)
+            .orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
 
     private String normalizeUrl(String originalUrl){
@@ -54,12 +61,6 @@ public class ShortLinkService {
             throw new InvalidUrlException("Url must have a host");
         }
         return trimmedUrl;
-    }
-
-    public String resolve(String code) {
-        return repository.findById(code)
-            .map(ShortLink::getOriginalUrl)
-            .orElseThrow(() -> new ShortLinkNotFoundException(code));
     }
 
     private String generateCode(){

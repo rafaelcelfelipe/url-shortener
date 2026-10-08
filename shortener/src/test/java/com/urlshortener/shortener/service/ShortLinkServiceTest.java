@@ -1,7 +1,7 @@
 package com.urlshortener.shortener.service;
 
-import com.urlshortener.shortener.dto.CreateLinkRequest;
-import com.urlshortener.shortener.dto.CreateLinkResponse;
+import com.urlshortener.shortener.dto.ShortLinkRequest;
+import com.urlshortener.shortener.dto.ShortLinkResponse;
 import com.urlshortener.shortener.exception.InvalidUrlException;
 import com.urlshortener.shortener.exception.ShortLinkNotFoundException;
 import com.urlshortener.shortener.mapper.ShortLinkMapper;
@@ -40,7 +40,7 @@ class ShortLinkServiceTest {
     void createsLinkForHttpsUrl() {
         when(repository.save(any(ShortLink.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreateLinkResponse response = service.create(new CreateLinkRequest("https://example.com/path"));
+        ShortLinkResponse response = service.create(new ShortLinkRequest("https://example.com/path"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
         assertEquals(7, response.code().length());
@@ -51,7 +51,7 @@ class ShortLinkServiceTest {
     void acceptsHttpUrl() {
         when(repository.save(any(ShortLink.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CreateLinkResponse response = service.create(new CreateLinkRequest("http://example.com"));
+        ShortLinkResponse response = service.create(new ShortLinkRequest("http://example.com"));
 
         assertEquals("http://localhost:8080/" + response.code(), response.shortUrl());
     }
@@ -72,27 +72,27 @@ class ShortLinkServiceTest {
 
     @Test
     void rejectsBlankUrl() {
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("   ")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("   ")));
     }
 
     @Test
     void rejectsRelativeUrl() {
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("/caminho")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("/caminho")));
     }
 
     @Test
     void rejectsUrlWithoutHost() {
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("https:///nohost")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("https:///nohost")));
     }
 
     @Test
     void rejectsNonHttpScheme() {
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("javascript:alert(1)")));
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("ftp://example.com")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("javascript:alert(1)")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("ftp://example.com")));
     }
 
     @Test
     void rejectsMalformedUrl() {
-        assertThrows(InvalidUrlException.class, () -> service.create(new CreateLinkRequest("https://ex ample.com")));
+        assertThrows(InvalidUrlException.class, () -> service.create(new ShortLinkRequest("https://ex ample.com")));
     }
 }

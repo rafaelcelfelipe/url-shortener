@@ -1,7 +1,7 @@
 package com.urlshortener.shortener.controller;
 
-import com.urlshortener.shortener.dto.CreateLinkRequest;
-import com.urlshortener.shortener.dto.CreateLinkResponse;
+import com.urlshortener.shortener.dto.ShortLinkRequest;
+import com.urlshortener.shortener.dto.ShortLinkResponse;
 import com.urlshortener.shortener.exception.InvalidUrlException;
 import com.urlshortener.shortener.service.ShortLinkService;
 import org.junit.jupiter.api.Test;
@@ -27,8 +27,8 @@ class ShortLinkControllerTest {
 
     @Test
     void createsLink() throws Exception {
-        when(service.create(new CreateLinkRequest("https://example.com")))
-            .thenReturn(new CreateLinkResponse("abc1234", "http://localhost:8080/abc1234"));
+        when(service.create(new ShortLinkRequest("https://example.com")))
+            .thenReturn(new ShortLinkResponse("abc1234", "http://localhost:8080/abc1234"));
         
         mockMvc.perform(post("/links")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -40,7 +40,7 @@ class ShortLinkControllerTest {
 
     @Test
     void rejectsInvalidUrl() throws Exception {
-        when(service.create(new CreateLinkRequest("ftp://example.com")))
+        when(service.create(new ShortLinkRequest("ftp://example.com")))
                 .thenThrow(new InvalidUrlException("Url must start with http or https"));
 
         mockMvc.perform(post("/links")
