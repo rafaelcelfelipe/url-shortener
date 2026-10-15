@@ -26,7 +26,11 @@ class ShortenerApplicationTests {
 		mockMvc.perform(get("/v3/api-docs"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.openapi").exists())
-				.andExpect(jsonPath("$.paths['/links']").exists());
+				.andExpect(jsonPath("$.paths['/links'].post").exists())
+				.andExpect(jsonPath("$.paths['/links'].get").exists())
+				.andExpect(jsonPath("$.paths['/links/{code}'].put").exists())
+				.andExpect(jsonPath("$.paths['/links/{code}'].delete").exists())
+				.andExpect(jsonPath("$.paths['/{code}'].get").exists());
 	}
 
 }
