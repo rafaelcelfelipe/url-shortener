@@ -18,12 +18,13 @@ Leia `docs/requisitos.md` antes de propor escopo, dependência ou desenho de API
 
 ## Estado
 
-Fase 1. Entidade `ShortLink`, repositório e `ShortLinkService.create` gravam no PostgreSQL. Testes de unidade e o contexto passam com o container `shortener-postgres` no ar. Próximo passo: `POST /links`. O redirecionamento vem depois. CI continua esperando esta fase fechar.
+Fase 1 fechada. Próximo passo: fase 2, Docker Compose com o serviço e o PostgreSQL. CI continua esperando.
 
+- `POST /links`, `GET /links`, `PUT /links/{code}`, `DELETE /links/{code}` e `GET /{code}` (302). Resposta com `code`, `shortUrl` e `originalUrl`.
+- PostgreSQL 18 no container `shortener-postgres`. `shortener.base-url=http://localhost:8080`. MapStruct 1.6.3. springdoc-openapi 3.1.1 em `/swagger-ui.html` e `/v3/api-docs`.
 - Repositório Git na raiz, remoto `rafaelcelfelipe/url-shortener`, branch `main`.
 - Módulo `shortener` com Spring Boot 4.1.1, Java 21 no `pom.xml`, WebMVC, Data JPA, Validation e driver PostgreSQL.
 - JDK 21 instalado em `/usr/local/opt/openjdk@21`. O `java` padrão do shell ainda é o 17. Compilar e rodar com `JAVA_HOME=/usr/local/opt/openjdk@21` e o `bin` desse JDK no `PATH`.
-- `./mvnw compile` ainda não foi registrado neste acompanhamento.
 
 ## Limites
 
