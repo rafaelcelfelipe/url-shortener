@@ -13,6 +13,20 @@ services:
       timeout: 5s
       retries: 10
 
+  statistics-postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: statistics
+      POSTGRES_USER: statistics
+      POSTGRES_PASSWORD: statistics
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U statistics -d statistics"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   kafka:
     image: apache/kafka:4.1.2
     hostname: kafka
@@ -47,6 +61,21 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:19092
     depends_on:
       postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  statistics:
+    build: ./statistics
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://statistics-postgres:5432/statistics
+      SPRING_DATASOURCE_USERNAME: statistics
+      SPRING_DATASOURCE_PASSWORD: statistics
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+    depends_on:
+      statistics-postgres:
         condition: service_healthy
       kafka:
         condition: service_started
