@@ -18,7 +18,7 @@ Leia `docs/requisitos.md` antes de propor escopo, dependência ou desenho de API
 
 ## Estado
 
-Fase 1 fechada. Próximo passo: fase 2, Docker Compose com o serviço e o PostgreSQL. CI continua esperando.
+Fase 2 fechada. Fase 3 em andamento: publicar um evento no Kafka a cada redirecionamento bem-sucedido. O serviço de estatísticas ainda não existe. CI continua esperando.
 
 - `POST /links`, `GET /links`, `PUT /links/{code}`, `DELETE /links/{code}` e `GET /{code}` (302). Resposta com `code`, `shortUrl` e `originalUrl`.
 - PostgreSQL 18 no container `shortener-postgres`. `shortener.base-url=http://localhost:8080`. MapStruct 1.6.3. springdoc-openapi 3.1.1 em `/swagger-ui.html` e `/v3/api-docs`.

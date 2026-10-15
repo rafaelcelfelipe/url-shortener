@@ -1,6 +1,9 @@
 package com.urlshortener.shortener.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+
 import com.urlshortener.shortener.model.ShortLink;
 import com.urlshortener.shortener.exception.InvalidUrlException;
 import com.urlshortener.shortener.exception.ShortLinkNotFoundException;
@@ -8,12 +11,14 @@ import com.urlshortener.shortener.repository.ShortLinkRepository;
 import com.urlshortener.shortener.mapper.ShortLinkMapper;
 import com.urlshortener.shortener.dto.ShortLinkRequest;
 import com.urlshortener.shortener.dto.ShortLinkResponse;
-import org.springframework.beans.factory.annotation.Value;
+import com.urlshortener.shortener.event.LinkRedirected;
 
 import java.security.SecureRandom;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.time.Instant;
 
 @Service
 public class ShortLinkService {
@@ -23,13 +28,20 @@ public class ShortLinkService {
     private final SecureRandom random = new SecureRandom();
     private final ShortLinkRepository repository;
     private final ShortLinkMapper mapper;
+    private final KafkaTemplate<String, LinkRedirected> kafkaTemplate;
     private final String baseUrl;
+    private final String redirectTopic;
+    
     public ShortLinkService(ShortLinkRepository repository,
                             ShortLinkMapper mapper,
-                            @Value("${shortener.base-url}") String baseUrl) {
+                            KafkaTemplate<String, LinkRedirected> kafkaTemplate,
+                            @Value("${shortener.base-url}") String baseUrl,
+                            @Value("${shortener.kafka.redirect-topic}") String redirectTopic) {
         this.repository = repository;
         this.mapper = mapper;
         this.baseUrl = baseUrl;
+        this.kafkaTemplate = kafkaTemplate;
+        this.redirectTopic = redirectTopic;
     }
 
     public ShortLinkResponse create(ShortLinkRequest request) {
@@ -59,9 +71,11 @@ public class ShortLinkService {
 
 
     public String resolve(String code) {
-        return repository.findById(code)
+        String originalUrl =repository.findById(code)
             .map(ShortLink::getOriginalUrl)
             .orElseThrow(() -> new ShortLinkNotFoundException(code));
+        kafkaTemplate.send(redirectTopic, code, new LinkRedirected(UUID.randomUUID(), code, Instant.now()));
+        return originalUrl;
     }
 
     private String normalizeUrl(String originalUrl){
