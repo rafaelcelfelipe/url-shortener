@@ -15,15 +15,19 @@ Leia `docs/requisitos.md` antes de propor escopo, dependência ou desenho de API
 - Se uma versão ou configuração não tiver sido conferida, diga isso e aponte a documentação oficial.
 - Responda em português.
 - No fim de cada fase, faça de 3 a 5 perguntas de entrevista, corrija as respostas e atualize a seção Estado abaixo.
+- Quando a mudança alterar rota, porta, serviço, evento, banco, stack ou o jeito de subir o sistema, atualize o `README.md` no mesmo passo. O agente grava esse arquivo. O README descreve o que está no repositório, em português: estudo de microsserviços, diagrama da arquitetura atual, rotas, stack e guia de como rodar.
 
 ## Estado
 
-Fase 3 fechada: o encurtador publica `link-redirected` no Kafka. Fase 4 em andamento: serviço `statistics` consome o evento e expõe a contagem. POM pai ainda não. CI continua esperando.
+Fase 4 no código: `statistics` consome `link-redirected` e expõe `GET /links/{code}` na porta 8081. CI roda os testes dos dois módulos em push e pull request. JaCoCo e POM pai ainda não. Redis, Keycloak, gateway, DLQ e Kubernetes continuam fora.
+
+- `README.md` na raiz descreve a arquitetura, as rotas, a stack e como rodar. Atualize esse arquivo quando o sistema mudar.
 
 - `POST /links`, `GET /links`, `PUT /links/{code}`, `DELETE /links/{code}` e `GET /{code}` (302). Resposta com `code`, `shortUrl` e `originalUrl`.
-- PostgreSQL 18 no container `shortener-postgres`. `shortener.base-url=http://localhost:8080`. MapStruct 1.6.3. springdoc-openapi 3.1.1 em `/swagger-ui.html` e `/v3/api-docs`.
+- Compose sobe `postgres` (5432), `statistics-postgres` (5433), `kafka` (9092), `shortener` (8080) e `statistics` (8081). Tópico `link-redirected`.
+- `shortener.base-url=http://localhost:8080`. MapStruct 1.6.3. springdoc-openapi 3.1.1 em `/swagger-ui.html` e `/v3/api-docs`.
 - Repositório Git na raiz, remoto `rafaelcelfelipe/url-shortener`, branch `main`.
-- Módulo `shortener` com Spring Boot 4.1.1, Java 21 no `pom.xml`, WebMVC, Data JPA, Validation e driver PostgreSQL.
+- Módulos `shortener` e `statistics`, cada um com Spring Boot 4.1.1 e Java 21 no próprio `pom.xml`. Sem POM pai.
 - JDK 21 instalado em `/usr/local/opt/openjdk@21`. O `java` padrão do shell ainda é o 17. Compilar e rodar com `JAVA_HOME=/usr/local/opt/openjdk@21` e o `bin` desse JDK no `PATH`.
 
 ## Limites
