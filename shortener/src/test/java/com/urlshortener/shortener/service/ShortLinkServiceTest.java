@@ -40,12 +40,15 @@ class ShortLinkServiceTest {
     @Mock
     private KafkaTemplate<String, LinkRedirected> kafkaTemplate;
 
+    @Mock
+    private OriginalUrlLookup originalUrlLookup;
+
     private ShortLinkService service;
 
     @BeforeEach
     void setUp() {
         ShortLinkMapper mapper = Mappers.getMapper(ShortLinkMapper.class);
-        service = new ShortLinkService(repository, mapper, kafkaTemplate, "http://localhost:8080", "link-redirected");
+        service = new ShortLinkService(repository, mapper, kafkaTemplate, originalUrlLookup, "http://localhost:8080", "link-redirected");
     }
 
     @Test
@@ -84,6 +87,7 @@ class ShortLinkServiceTest {
         assertEquals("abc1234", response.code());
         assertEquals("http://localhost:8080/abc1234", response.shortUrl());
         assertEquals("https://example.com/new", response.originalUrl());
+        verify(originalUrlLookup).evict("abc1234");
     }
 
     @Test
@@ -118,6 +122,7 @@ class ShortLinkServiceTest {
         service.delete("abc1234");
 
         verify(repository).delete(existing);
+        verify(originalUrlLookup).evict("abc1234");
     }
 
     @Test
@@ -126,6 +131,7 @@ class ShortLinkServiceTest {
 
         assertThrows(ShortLinkNotFoundException.class, () -> service.delete("missing"));
         verify(repository, never()).delete(any());
+        verify(originalUrlLookup, never()).evict(any());
     }
 
     @Test
@@ -144,7 +150,7 @@ class ShortLinkServiceTest {
 
     @Test
     void resolvesExistingCode() {
-        when(repository.findById("abc1234")).thenReturn(Optional.of(new ShortLink("abc1234", "https://example.com/path")));
+        when(originalUrlLookup.findOriginalUrl("abc1234")).thenReturn("https://example.com/path");
 
         assertEquals("https://example.com/path", service.resolve("abc1234"));
 
@@ -157,7 +163,7 @@ class ShortLinkServiceTest {
 
     @Test
     void rejectsUnknownCode() {
-        when(repository.findById("missing")).thenReturn(Optional.empty());
+        when(originalUrlLookup.findOriginalUrl("missing")).thenThrow(new ShortLinkNotFoundException("missing"));
 
         assertThrows(ShortLinkNotFoundException.class, () -> service.resolve("missing"));
         verify(kafkaTemplate, never()).send(any(), any(), any());

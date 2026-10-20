@@ -19,12 +19,12 @@ Leia `docs/requisitos.md` antes de propor escopo, dependência ou desenho de API
 
 ## Estado
 
-Fase 4 no código: `statistics` consome `link-redirected` e expõe `GET /links/{code}` na porta 8081. CI roda os testes dos dois módulos em push e pull request. JaCoCo e POM pai ainda não. Redis, Keycloak, gateway, DLQ e Kubernetes continuam fora.
+Fase 5 em andamento: o redirect do `shortener` lê a URL original no Redis antes do PostgreSQL. Editar ou apagar remove a entrada. O evento continua em todo redirect bem-sucedido. JaCoCo e POM pai ainda não. Keycloak, gateway, DLQ e Kubernetes continuam fora.
 
 - `README.md` na raiz descreve a arquitetura, as rotas, a stack e como rodar. Atualize esse arquivo quando o sistema mudar.
 
 - `POST /links`, `GET /links`, `PUT /links/{code}`, `DELETE /links/{code}` e `GET /{code}` (302). Resposta com `code`, `shortUrl` e `originalUrl`.
-- Compose sobe `postgres` (5432), `statistics-postgres` (5433), `kafka` (9092), `shortener` (8080) e `statistics` (8081). Tópico `link-redirected`.
+- Compose sobe `postgres` (5432), `statistics-postgres` (5433), `kafka` (9092), `redis` (6379), `shortener` (8080) e `statistics` (8081). Tópico `link-redirected`. Cache `original-urls`, TTL de 10 minutos.
 - `shortener.base-url=http://localhost:8080`. MapStruct 1.6.3. springdoc-openapi 3.1.1 em `/swagger-ui.html` e `/v3/api-docs`.
 - Repositório Git na raiz, remoto `rafaelcelfelipe/url-shortener`, branch `main`.
 - Módulos `shortener` e `statistics`, cada um com Spring Boot 4.1.1 e Java 21 no próprio `pom.xml`. Sem POM pai.

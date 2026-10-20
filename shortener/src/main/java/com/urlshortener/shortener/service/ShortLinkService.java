@@ -29,12 +29,14 @@ public class ShortLinkService {
     private final ShortLinkRepository repository;
     private final ShortLinkMapper mapper;
     private final KafkaTemplate<String, LinkRedirected> kafkaTemplate;
+    private final OriginalUrlLookup originalUrlLookup;
     private final String baseUrl;
     private final String redirectTopic;
     
     public ShortLinkService(ShortLinkRepository repository,
                             ShortLinkMapper mapper,
                             KafkaTemplate<String, LinkRedirected> kafkaTemplate,
+                            OriginalUrlLookup originalUrlLookup,
                             @Value("${shortener.base-url}") String baseUrl,
                             @Value("${shortener.kafka.redirect-topic}") String redirectTopic) {
         this.repository = repository;
@@ -42,6 +44,7 @@ public class ShortLinkService {
         this.baseUrl = baseUrl;
         this.kafkaTemplate = kafkaTemplate;
         this.redirectTopic = redirectTopic;
+        this.originalUrlLookup = originalUrlLookup;
     }
 
     public ShortLinkResponse create(ShortLinkRequest request) {
@@ -69,11 +72,8 @@ public class ShortLinkService {
         repository.delete(existing);
     }
 
-
     public String resolve(String code) {
-        String originalUrl =repository.findById(code)
-            .map(ShortLink::getOriginalUrl)
-            .orElseThrow(() -> new ShortLinkNotFoundException(code));
+        String originalUrl = originalUrlLookup.findOriginalUrl(code);
         kafkaTemplate.send(redirectTopic, code, new LinkRedirected(UUID.randomUUID(), code, Instant.now()));
         return originalUrl;
     }

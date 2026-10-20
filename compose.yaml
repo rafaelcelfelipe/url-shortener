@@ -59,11 +59,14 @@ services:
       SPRING_DATASOURCE_USERNAME: shortener
       SPRING_DATASOURCE_PASSWORD: shortener
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:19092
+      SPRING_DATA_REDIS_HOST: redis
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
         condition: service_started
+      redis:
+        condition: service_healthy
 
   statistics:
     build: ./statistics
@@ -79,3 +82,13 @@ services:
         condition: service_healthy
       kafka:
         condition: service_started
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

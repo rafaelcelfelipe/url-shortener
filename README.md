@@ -13,15 +13,19 @@ flowchart LR
   statistics["statistics :8081"]
   shortenerDb[("PostgreSQL shortener :5432")]
   statisticsDb[("PostgreSQL statistics :5433")]
+  redis[("Redis :6379")]
   kafka["Kafka tópico link-redirected"]
 
   client -->|HTTP| shortener
   client -->|HTTP| statistics
   shortener --> shortenerDb
+  shortener -->|URL original do redirect| redis
   shortener -->|publica a cada redirect 302| kafka
   kafka -->|consome| statistics
   statistics --> statisticsDb
 ```
+
+O redirect procura a URL original no Redis. Se não estiver lá, lê o PostgreSQL e guarda por 10 minutos. Editar ou apagar o link remove essa entrada. O evento sai em todo redirect que deu certo, mesmo quando a URL veio do cache.
 
 Um redirecionamento bem-sucedido publica `link-redirected`. A mensagem leva `eventId`, `code` e `occurredAt`. A chave é o código do link. O mesmo `eventId` não aumenta a contagem outra vez.
 
@@ -61,12 +65,13 @@ Um código que ainda não foi clicado responde 200 com `accessCount` 0. Este ser
 | springdoc-openapi 3.1.1 | Swagger só do encurtador |
 | PostgreSQL 18 | Um banco `shortener` e outro `statistics` |
 | Apache Kafka 4.1.2 | Broker em KRaft, sem ZooKeeper |
+| Redis 8 | Cache da URL original no redirect do encurtador |
 | JUnit 5 e Mockito | Testes dos dois módulos |
-| Docker Compose | Sobe os dois serviços, os dois bancos e o Kafka |
+| Docker Compose | Sobe os dois serviços, os dois bancos, o Kafka e o Redis |
 | GitHub Actions | Roda os testes em push e pull request |
 | Liberica OpenJRE 21 | Imagem dos serviços |
 
-Redis, Keycloak, gateway, JaCoCo e Kubernetes ainda não fazem parte do código.
+Keycloak, gateway, JaCoCo e Kubernetes ainda não fazem parte do código.
 
 ## Como rodar
 
@@ -109,4 +114,4 @@ export PATH="$JAVA_HOME/bin:$PATH"
 ./shortener/mvnw -B -f statistics/pom.xml test
 ```
 
-O teste de contexto do encurtador conecta em `localhost:5432`. Com o Compose no ar, esse endereço é o banco `shortener`. O mesmo comando roda no GitHub Actions, que sobe o PostgreSQL dentro do job.
+O teste de contexto do encurtador conecta em `localhost:5432` e o cache aponta para `localhost:6379`. Com o Compose no ar, esses endereços são o banco `shortener` e o Redis. O GitHub Actions sobe os dois dentro do job.
