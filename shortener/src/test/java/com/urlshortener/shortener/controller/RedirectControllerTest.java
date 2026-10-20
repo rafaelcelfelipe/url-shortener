@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RedirectController.class)
-@Import(ApiExceptionHandler.class)
+@Import({ApiExceptionHandler.class, SliceCacheConfig.class})
 class RedirectControllerTest {
 
     @Autowired
