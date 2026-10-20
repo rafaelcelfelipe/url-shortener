@@ -64,12 +64,14 @@ public class ShortLinkService {
         ShortLink existing = getShortLinkEntity(code);
         existing.setOriginalUrl(url);
         ShortLink saved = repository.save(existing);
+        originalUrlLookup.evict(code);
         return mapper.toResponse(saved, baseUrl);
     }
 
     public void delete(String code){
         ShortLink existing = getShortLinkEntity(code);
         repository.delete(existing);
+        originalUrlLookup.evict(code);
     }
 
     public String resolve(String code) {
